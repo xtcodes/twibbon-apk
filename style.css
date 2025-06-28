@@ -8,3 +8,27 @@ canvas {
   width: 100%;
   border: 1px solid #ccc;
 }
+.toast {
+  visibility: hidden;
+  min-width: 250px;
+  background-color: #f44336;
+  color: white;
+  text-align: center;
+  border-radius: 8px;
+  padding: 16px;
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: visibility 0s, opacity 0.4s ease;
+  opacity: 0;
+}
+
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+}
+
