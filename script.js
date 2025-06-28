@@ -1,4 +1,5 @@
-const upload = document.getElementById('upload');
+const uploadInput = document.getElementById('upload');
+const uploadBtn = document.getElementById('uploadBtn');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('download');
@@ -8,9 +9,8 @@ const twibbon = new Image();
 twibbon.src = 'twibbon.png';
 
 const placeholder = new Image();
-placeholder.src = 'placeholder.png'; // Gambar default sebelum upload
+placeholder.src = 'placeholder.png';
 
-// State
 let photo = null;
 let scale = 1;
 let offsetX = 0;
@@ -24,18 +24,15 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
-// Fungsi menggambar
+// Gambar ulang canvas
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (photo) {
     const imgW = photo.width * scale;
     const imgH = photo.height * scale;
-    const x = offsetX;
-    const y = offsetY;
-    ctx.drawImage(photo, x, y, imgW, imgH);
+    ctx.drawImage(photo, offsetX, offsetY, imgW, imgH);
   } else {
-    // Tampilkan placeholder
     const pw = placeholder.width;
     const ph = placeholder.height;
     const ratio = Math.min(canvas.width / pw, canvas.height / ph);
@@ -48,14 +45,13 @@ function draw() {
     ctx.globalAlpha = 1;
   }
 
-  // Twibbon di atas segalanya
   ctx.save();
   ctx.globalAlpha = twibbonAlpha;
   ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
   ctx.restore();
 }
 
-// Animasi perubahan alpha
+// Animasi alpha twibbon
 function animateTwibbonAlpha() {
   if (animating) return;
   animating = true;
@@ -68,7 +64,6 @@ function animateTwibbonAlpha() {
       animating = false;
       return;
     }
-
     twibbonAlpha += diff * 0.1;
     draw();
     requestAnimationFrame(step);
@@ -77,7 +72,6 @@ function animateTwibbonAlpha() {
   step();
 }
 
-// Timeout untuk mengembalikan alpha twibbon
 let hideTwibbonTimeout = null;
 function showTwibbonLater() {
   clearTimeout(hideTwibbonTimeout);
@@ -87,9 +81,24 @@ function showTwibbonLater() {
   }, 300);
 }
 
-// Upload gambar pengguna
-upload.addEventListener('change', function () {
-  const file = upload.files[0];
+// Fungsi toast
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+
+// Tombol upload trigger input
+uploadBtn.addEventListener('click', () => {
+  uploadInput.click();
+});
+
+// Input file handler
+uploadInput.addEventListener('change', function () {
+  const file = uploadInput.files[0];
   const reader = new FileReader();
 
   reader.onload = function (e) {
@@ -107,7 +116,7 @@ upload.addEventListener('change', function () {
   if (file) reader.readAsDataURL(file);
 });
 
-// Mouse interaction
+// Mouse drag
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -131,7 +140,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
-// Touch interaction
+// Touch gesture
 canvas.addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -180,26 +189,14 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', () => isDragging = false);
 
-// Hitung jarak dua titik (untuk pinch zoom)
+// Hitung jarak dua titik
 function getDist(p1, p2) {
   const dx = p1.clientX - p2.clientX;
   const dy = p1.clientY - p2.clientY;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Pesan alert
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
-}
-
-
-// Tombol download dengan validasi
+// Tombol download
 downloadBtn.addEventListener('click', function () {
   if (!photo) {
     showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
@@ -212,12 +209,8 @@ downloadBtn.addEventListener('click', function () {
   link.click();
 });
 
-// Gambar awal saat halaman dibuka
+// Gambar pertama saat halaman load
 window.onload = () => {
-  placeholder.onload = () => {
-    draw();
-  };
-  if (placeholder.complete) {
-    draw();
-  }
+  placeholder.onload = () => draw();
+  if (placeholder.complete) draw();
 };
