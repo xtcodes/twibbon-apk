@@ -15,6 +15,11 @@ let startY = 0;
 let isDragging = false;
 let lastDist = 0;
 
+let twibbonAlpha = 1;
+let targetAlpha = 1;
+let animating = false;
+
+// Drawing function
 function draw() {
   if (!photo) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -25,9 +30,46 @@ function draw() {
   const y = offsetY;
 
   ctx.drawImage(photo, x, y, imgW, imgH);
+
+  ctx.save();
+  ctx.globalAlpha = twibbonAlpha;
   ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
+  ctx.restore();
 }
 
+// Animate fade in/out for Twibbon
+function animateTwibbonAlpha() {
+  if (animating) return;
+  animating = true;
+
+  function step() {
+    const diff = targetAlpha - twibbonAlpha;
+    if (Math.abs(diff) < 0.01) {
+      twibbonAlpha = targetAlpha;
+      draw();
+      animating = false;
+      return;
+    }
+
+    twibbonAlpha += diff * 0.1; // smooth step
+    draw();
+    requestAnimationFrame(step);
+  }
+
+  step();
+}
+
+// Trigger fade to normal after idle
+let hideTwibbonTimeout = null;
+function showTwibbonLater() {
+  clearTimeout(hideTwibbonTimeout);
+  hideTwibbonTimeout = setTimeout(() => {
+    targetAlpha = 1;
+    animateTwibbonAlpha();
+  }, 300);
+}
+
+// Load uploaded image
 upload.addEventListener('change', function () {
   const file = upload.files[0];
   const reader = new FileReader();
@@ -49,7 +91,7 @@ upload.addEventListener('change', function () {
   if (file) reader.readAsDataURL(file);
 });
 
-// Mouse events
+// Mouse interaction
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -64,13 +106,16 @@ canvas.addEventListener('mousemove', (e) => {
   startY = e.offsetY;
   offsetX += dx;
   offsetY += dy;
-  draw();
+
+  targetAlpha = 0.5;
+  animateTwibbonAlpha();
+  showTwibbonLater();
 });
 
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
-// Touch events
+// Touch gesture
 canvas.addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -90,22 +135,28 @@ canvas.addEventListener('touchmove', (e) => {
     startY = e.touches[0].clientY;
     offsetX += dx;
     offsetY += dy;
-    draw();
+
+    targetAlpha = 0.5;
+    animateTwibbonAlpha();
+    showTwibbonLater();
   } else if (e.touches.length === 2) {
     const newDist = getDist(e.touches[0], e.touches[1]);
     const zoom = newDist / lastDist;
     lastDist = newDist;
 
-    // Zoom toward center
-    const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - canvas.getBoundingClientRect().left;
-    const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - canvas.getBoundingClientRect().top;
+    const rect = canvas.getBoundingClientRect();
+    const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+    const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
 
     const prevScale = scale;
     scale *= zoom;
 
     offsetX -= (centerX - offsetX) * (scale / prevScale - 1);
     offsetY -= (centerY - offsetY) * (scale / prevScale - 1);
-    draw();
+
+    targetAlpha = 0.5;
+    animateTwibbonAlpha();
+    showTwibbonLater();
   }
 }, { passive: false });
 
@@ -117,7 +168,7 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Download button
+// Download result
 downloadBtn.addEventListener('click', function () {
   const link = document.createElement('a');
   link.download = 'twibboned-image.png';
