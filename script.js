@@ -2,8 +2,13 @@ const upload = document.getElementById('upload');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('download');
+
+// Gambar twibbon dan placeholder
 const twibbon = new Image();
 twibbon.src = 'twibbon.png';
+
+const placeholder = new Image();
+placeholder.src = 'placeholder.png'; // Pastikan file ini ada di folder
 
 // State
 let photo = null;
@@ -19,25 +24,38 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
-// Drawing function
+// Draw function
 function draw() {
-  if (!photo) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const imgW = photo.width * scale;
-  const imgH = photo.height * scale;
-  const x = offsetX;
-  const y = offsetY;
+  if (photo) {
+    const imgW = photo.width * scale;
+    const imgH = photo.height * scale;
+    const x = offsetX;
+    const y = offsetY;
+    ctx.drawImage(photo, x, y, imgW, imgH);
+  } else {
+    // Tampilkan placeholder di tengah canvas
+    const pw = placeholder.width;
+    const ph = placeholder.height;
+    const ratio = Math.min(canvas.width / pw, canvas.height / ph);
+    const w = pw * ratio;
+    const h = ph * ratio;
+    const x = (canvas.width - w) / 2;
+    const y = (canvas.height - h) / 2;
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(placeholder, x, y, w, h);
+    ctx.globalAlpha = 1;
+  }
 
-  ctx.drawImage(photo, x, y, imgW, imgH);
-
+  // Gambar twibbon di atas semuanya
   ctx.save();
   ctx.globalAlpha = twibbonAlpha;
   ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
   ctx.restore();
 }
 
-// Animate fade in/out for Twibbon
+// Alpha transition animation
 function animateTwibbonAlpha() {
   if (animating) return;
   animating = true;
@@ -51,7 +69,7 @@ function animateTwibbonAlpha() {
       return;
     }
 
-    twibbonAlpha += diff * 0.1; // smooth step
+    twibbonAlpha += diff * 0.1;
     draw();
     requestAnimationFrame(step);
   }
@@ -59,7 +77,7 @@ function animateTwibbonAlpha() {
   step();
 }
 
-// Trigger fade to normal after idle
+// Tunda kembalikan alpha normal setelah geser/zoom
 let hideTwibbonTimeout = null;
 function showTwibbonLater() {
   clearTimeout(hideTwibbonTimeout);
@@ -69,7 +87,7 @@ function showTwibbonLater() {
   }, 300);
 }
 
-// Load uploaded image
+// Load gambar pengguna
 upload.addEventListener('change', function () {
   const file = upload.files[0];
   const reader = new FileReader();
@@ -79,7 +97,7 @@ upload.addEventListener('change', function () {
     img.onload = function () {
       photo = img;
 
-      // Reset position and scale
+      // Atur scale dan posisi awal
       scale = canvas.width / img.width;
       offsetX = 0;
       offsetY = 0;
@@ -91,7 +109,7 @@ upload.addEventListener('change', function () {
   if (file) reader.readAsDataURL(file);
 });
 
-// Mouse interaction
+// Mouse drag
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -99,7 +117,7 @@ canvas.addEventListener('mousedown', (e) => {
 });
 
 canvas.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
+  if (!isDragging || !photo) return;
   const dx = e.offsetX - startX;
   const dy = e.offsetY - startY;
   startX = e.offsetX;
@@ -115,7 +133,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
-// Touch gesture
+// Touch gesture (drag & zoom)
 canvas.addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -128,6 +146,8 @@ canvas.addEventListener('touchstart', (e) => {
 
 canvas.addEventListener('touchmove', (e) => {
   e.preventDefault();
+  if (!photo) return;
+
   if (e.touches.length === 1 && isDragging) {
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
@@ -162,16 +182,27 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', () => isDragging = false);
 
+// Hitung jarak dua jari
 function getDist(p1, p2) {
   const dx = p1.clientX - p2.clientX;
   const dy = p1.clientY - p2.clientY;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Download result
+// Unduh hasil gabungan
 downloadBtn.addEventListener('click', function () {
   const link = document.createElement('a');
   link.download = 'twibboned-image.png';
   link.href = canvas.toDataURL();
   link.click();
 });
+
+// Gambar awal saat halaman dimuat
+window.onload = () => {
+  placeholder.onload = () => {
+    draw();
+  };
+  if (placeholder.complete) {
+    draw();
+  }
+};
