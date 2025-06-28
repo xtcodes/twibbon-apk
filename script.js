@@ -187,13 +187,14 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-//
+// Pesan alert
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
-  toast.className = "toast show";
+  toast.classList.add("show");
+
   setTimeout(() => {
-    toast.className = toast.className.replace("show", "");
+    toast.classList.remove("show");
   }, 3000);
 }
 
