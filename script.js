@@ -8,7 +8,7 @@ const twibbon = new Image();
 twibbon.src = 'twibbon.png';
 
 const placeholder = new Image();
-placeholder.src = 'placeholder.png'; // Pastikan file ini ada di folder
+placeholder.src = 'placeholder.png'; // Gambar default sebelum upload
 
 // State
 let photo = null;
@@ -24,7 +24,7 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
-// Draw function
+// Fungsi menggambar
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -35,7 +35,7 @@ function draw() {
     const y = offsetY;
     ctx.drawImage(photo, x, y, imgW, imgH);
   } else {
-    // Tampilkan placeholder di tengah canvas
+    // Tampilkan placeholder
     const pw = placeholder.width;
     const ph = placeholder.height;
     const ratio = Math.min(canvas.width / pw, canvas.height / ph);
@@ -48,14 +48,14 @@ function draw() {
     ctx.globalAlpha = 1;
   }
 
-  // Gambar twibbon di atas semuanya
+  // Twibbon di atas segalanya
   ctx.save();
   ctx.globalAlpha = twibbonAlpha;
   ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
   ctx.restore();
 }
 
-// Alpha transition animation
+// Animasi perubahan alpha
 function animateTwibbonAlpha() {
   if (animating) return;
   animating = true;
@@ -77,7 +77,7 @@ function animateTwibbonAlpha() {
   step();
 }
 
-// Tunda kembalikan alpha normal setelah geser/zoom
+// Timeout untuk mengembalikan alpha twibbon
 let hideTwibbonTimeout = null;
 function showTwibbonLater() {
   clearTimeout(hideTwibbonTimeout);
@@ -87,7 +87,7 @@ function showTwibbonLater() {
   }, 300);
 }
 
-// Load gambar pengguna
+// Upload gambar pengguna
 upload.addEventListener('change', function () {
   const file = upload.files[0];
   const reader = new FileReader();
@@ -96,8 +96,6 @@ upload.addEventListener('change', function () {
     const img = new Image();
     img.onload = function () {
       photo = img;
-
-      // Atur scale dan posisi awal
       scale = canvas.width / img.width;
       offsetX = 0;
       offsetY = 0;
@@ -109,7 +107,7 @@ upload.addEventListener('change', function () {
   if (file) reader.readAsDataURL(file);
 });
 
-// Mouse drag
+// Mouse interaction
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -133,7 +131,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
-// Touch gesture (drag & zoom)
+// Touch interaction
 canvas.addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -182,22 +180,27 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', () => isDragging = false);
 
-// Hitung jarak dua jari
+// Hitung jarak dua titik (untuk pinch zoom)
 function getDist(p1, p2) {
   const dx = p1.clientX - p2.clientX;
   const dy = p1.clientY - p2.clientY;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Unduh hasil gabungan
+// Tombol download dengan validasi
 downloadBtn.addEventListener('click', function () {
+  if (!photo) {
+    alert("⚠️ Silakan unggah gambar terlebih dahulu.");
+    return;
+  }
+
   const link = document.createElement('a');
   link.download = 'twibboned-image.png';
   link.href = canvas.toDataURL();
   link.click();
 });
 
-// Gambar awal saat halaman dimuat
+// Gambar awal saat halaman dibuka
 window.onload = () => {
   placeholder.onload = () => {
     draw();
