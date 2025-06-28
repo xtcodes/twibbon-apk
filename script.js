@@ -187,10 +187,21 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+//
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.className = "toast show";
+  setTimeout(() => {
+    toast.className = toast.className.replace("show", "");
+  }, 3000);
+}
+
+
 // Tombol download dengan validasi
 downloadBtn.addEventListener('click', function () {
   if (!photo) {
-    alert("⚠️ Silakan unggah gambar terlebih dahulu.");
+    showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
     return;
   }
 
