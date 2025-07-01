@@ -3,6 +3,7 @@ const uploadBtn = document.getElementById('uploadBtn');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('download');
+const countdownText = document.getElementById('countdownText');
 
 const twibbon = new Image();
 twibbon.src = 'twibbon.png';
@@ -23,7 +24,7 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
-// Gambar canvas
+// Fungsi gambar canvas
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -89,12 +90,11 @@ function showToast(message) {
   }, 3000);
 }
 
-// Tombol upload trigger input
+// Tombol upload
 uploadBtn.addEventListener('click', () => {
   uploadInput.click();
 });
 
-// Upload handler
 uploadInput.addEventListener('change', function () {
   const file = uploadInput.files[0];
   const reader = new FileReader();
@@ -193,25 +193,24 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Unduh dengan countdown otomatis
+// Tombol download + countdown eksternal
 downloadBtn.addEventListener('click', function () {
   if (!photo) {
     showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
     return;
   }
 
-  let countdown = 15; // Ganti ke 30 jika ingin 30 detik
+  let countdown = 15;
   downloadBtn.disabled = true;
-  const originalText = downloadBtn.textContent;
-  downloadBtn.textContent = `⏳ Mengunduh dalam ${countdown} detik...`;
+  countdownText.textContent = `⏳ Mengunduh dalam ${countdown} detik...`;
 
   const interval = setInterval(() => {
     countdown--;
     if (countdown > 0) {
-      downloadBtn.textContent = `⏳ Mengunduh dalam ${countdown} detik...`;
+      countdownText.textContent = `⏳ Mengunduh dalam ${countdown} detik...`;
     } else {
       clearInterval(interval);
-      downloadBtn.textContent = originalText;
+      countdownText.textContent = '';
       downloadBtn.disabled = false;
 
       const link = document.createElement('a');
