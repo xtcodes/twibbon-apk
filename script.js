@@ -4,7 +4,6 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('download');
 
-// Gambar twibbon dan placeholder
 const twibbon = new Image();
 twibbon.src = 'twibbon.png';
 
@@ -24,7 +23,7 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
-// Gambar ulang canvas
+// Gambar canvas
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -51,7 +50,6 @@ function draw() {
   ctx.restore();
 }
 
-// Animasi alpha twibbon
 function animateTwibbonAlpha() {
   if (animating) return;
   animating = true;
@@ -96,7 +94,7 @@ uploadBtn.addEventListener('click', () => {
   uploadInput.click();
 });
 
-// Input file handler
+// Upload handler
 uploadInput.addEventListener('change', function () {
   const file = uploadInput.files[0];
   const reader = new FileReader();
@@ -116,7 +114,7 @@ uploadInput.addEventListener('change', function () {
   if (file) reader.readAsDataURL(file);
 });
 
-// Mouse drag
+// Mouse interaction
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -140,7 +138,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
-// Touch gesture
+// Touch interaction
 canvas.addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -189,27 +187,41 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', () => isDragging = false);
 
-// Hitung jarak dua titik
 function getDist(p1, p2) {
   const dx = p1.clientX - p2.clientX;
   const dy = p1.clientY - p2.clientY;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Tombol download
+// Unduh dengan countdown otomatis
 downloadBtn.addEventListener('click', function () {
   if (!photo) {
     showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
     return;
   }
 
-  const link = document.createElement('a');
-  link.download = 'twibboned-image.png';
-  link.href = canvas.toDataURL();
-  link.click();
+  let countdown = 15; // Ganti ke 30 jika ingin 30 detik
+  downloadBtn.disabled = true;
+  const originalText = downloadBtn.textContent;
+  downloadBtn.textContent = `⏳ Mengunduh dalam ${countdown} detik...`;
+
+  const interval = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      downloadBtn.textContent = `⏳ Mengunduh dalam ${countdown} detik...`;
+    } else {
+      clearInterval(interval);
+      downloadBtn.textContent = originalText;
+      downloadBtn.disabled = false;
+
+      const link = document.createElement('a');
+      link.download = 'twibboned-image.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  }, 1000);
 });
 
-// Gambar pertama saat halaman load
 window.onload = () => {
   placeholder.onload = () => draw();
   if (placeholder.complete) draw();
