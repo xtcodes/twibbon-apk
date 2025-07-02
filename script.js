@@ -24,7 +24,6 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
-// Fungsi gambar canvas
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -80,7 +79,6 @@ function showTwibbonLater() {
   }, 300);
 }
 
-// Fungsi toast
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
@@ -90,7 +88,6 @@ function showToast(message) {
   }, 3000);
 }
 
-// Tombol upload
 uploadBtn.addEventListener('click', () => {
   uploadInput.click();
 });
@@ -114,7 +111,6 @@ uploadInput.addEventListener('change', function () {
   if (file) reader.readAsDataURL(file);
 });
 
-// Mouse interaction
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -138,7 +134,6 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
-// Touch interaction
 canvas.addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -193,7 +188,7 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Tombol download + countdown eksternal
+// Download + export ke HD
 downloadBtn.addEventListener('click', function () {
   if (!photo) {
     showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
@@ -213,9 +208,28 @@ downloadBtn.addEventListener('click', function () {
       countdownText.textContent = '';
       downloadBtn.disabled = false;
 
+      // 🔽 Mulai export ke HD
+      const exportSize = 1080;
+      const exportCanvas = document.createElement('canvas');
+      const exportCtx = exportCanvas.getContext('2d');
+      exportCanvas.width = exportSize;
+      exportCanvas.height = exportSize;
+
+      const scaleFactor = exportSize / canvas.width;
+
+      if (photo) {
+        const imgW = photo.width * scale * scaleFactor;
+        const imgH = photo.height * scale * scaleFactor;
+        const x = offsetX * scaleFactor;
+        const y = offsetY * scaleFactor;
+        exportCtx.drawImage(photo, x, y, imgW, imgH);
+      }
+
+      exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
+
       const link = document.createElement('a');
-      link.download = 'twibboned-image.png';
-      link.href = canvas.toDataURL();
+      link.download = 'twibboned-image-HD.png';
+      link.href = exportCanvas.toDataURL('image/png');
       link.click();
     }
   }, 1000);
