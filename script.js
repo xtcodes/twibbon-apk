@@ -154,7 +154,7 @@ twibbonInput.addEventListener('change', function () {
       }
 
       if (!hasTransparency) {
-        showToast("❌ Twibbon harus memiliki bagian transparan (PNG dengan alpha)");
+        showToast("❌ Twibbon harus memiliki bagian transparan!");
         return;
       }
 
@@ -250,7 +250,7 @@ function getDist(p1, p2) {
 // Export HD
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
-    showToast("⚠️ Silakan unggah gambar dan twibbon terlebih dahulu.");
+    showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
     return;
   }
 
