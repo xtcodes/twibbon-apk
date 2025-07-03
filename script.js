@@ -1,17 +1,17 @@
 const uploadInput = document.getElementById('upload');
 const uploadBtn = document.getElementById('uploadBtn');
+const twibbonInput = document.getElementById('twibbonInput');
+const twibbonBtn = document.getElementById('twibbonBtn');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('download');
 const countdownText = document.getElementById('countdownText');
 
-const twibbon = new Image();
-twibbon.src = 'twibbon.png';
-
 const placeholder = new Image();
 placeholder.src = 'placeholder.png';
 
 let photo = null;
+let twibbon = null;
 let scale = 1;
 let offsetX = 0;
 let offsetY = 0;
@@ -44,10 +44,12 @@ function draw() {
     ctx.globalAlpha = 1;
   }
 
-  ctx.save();
-  ctx.globalAlpha = twibbonAlpha;
-  ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
-  ctx.restore();
+  if (twibbon) {
+    ctx.save();
+    ctx.globalAlpha = twibbonAlpha;
+    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
 }
 
 function animateTwibbonAlpha() {
@@ -88,6 +90,7 @@ function showToast(message) {
   }, 3000);
 }
 
+// Upload Gambar
 uploadBtn.addEventListener('click', () => {
   uploadInput.click();
 });
@@ -104,6 +107,10 @@ uploadInput.addEventListener('change', function () {
       offsetX = 0;
       offsetY = 0;
       draw();
+
+      uploadBtn.style.display = 'none';
+      uploadInput.style.display = 'none';
+      twibbonBtn.style.display = 'inline-block';
     };
     img.src = e.target.result;
   };
@@ -111,6 +118,56 @@ uploadInput.addEventListener('change', function () {
   if (file) reader.readAsDataURL(file);
 });
 
+// Upload Twibbon
+twibbonBtn.addEventListener('click', () => {
+  twibbonInput.click();
+});
+
+twibbonInput.addEventListener('change', function () {
+  const file = twibbonInput.files[0];
+  if (!file) return;
+
+  if (file.type !== 'image/png') {
+    showToast('❌ Twibbon harus berupa file PNG!');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const img = new Image();
+    img.onload = function () {
+      // Validasi transparansi
+      const testCanvas = document.createElement('canvas');
+      testCanvas.width = img.width;
+      testCanvas.height = img.height;
+      const testCtx = testCanvas.getContext('2d');
+      testCtx.drawImage(img, 0, 0);
+      const pixels = testCtx.getImageData(0, 0, img.width, img.height).data;
+      let hasTransparency = false;
+
+      for (let i = 3; i < pixels.length; i += 4) {
+        if (pixels[i] < 255) {
+          hasTransparency = true;
+          break;
+        }
+      }
+
+      if (!hasTransparency) {
+        showToast("❌ Twibbon harus memiliki bagian transparan (PNG dengan alpha)");
+        return;
+      }
+
+      twibbon = img;
+      draw();
+    };
+
+    img.src = e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+});
+
+// Interaksi drag zoom
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -188,10 +245,10 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Download + export ke HD
+// Export HD saat download
 downloadBtn.addEventListener('click', function () {
-  if (!photo) {
-    showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
+  if (!photo || !twibbon) {
+    showToast("⚠️ Silakan unggah gambar dan twibbon terlebih dahulu.");
     return;
   }
 
@@ -208,7 +265,6 @@ downloadBtn.addEventListener('click', function () {
       countdownText.textContent = '';
       downloadBtn.disabled = false;
 
-      // 🔽 Mulai export ke HD
       const exportSize = 1080;
       const exportCanvas = document.createElement('canvas');
       const exportCtx = exportCanvas.getContext('2d');
@@ -216,14 +272,11 @@ downloadBtn.addEventListener('click', function () {
       exportCanvas.height = exportSize;
 
       const scaleFactor = exportSize / canvas.width;
-
-      if (photo) {
-        const imgW = photo.width * scale * scaleFactor;
-        const imgH = photo.height * scale * scaleFactor;
-        const x = offsetX * scaleFactor;
-        const y = offsetY * scaleFactor;
-        exportCtx.drawImage(photo, x, y, imgW, imgH);
-      }
+      const imgW = photo.width * scale * scaleFactor;
+      const imgH = photo.height * scale * scaleFactor;
+      const x = offsetX * scaleFactor;
+      const y = offsetY * scaleFactor;
+      exportCtx.drawImage(photo, x, y, imgW, imgH);
 
       exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
 
