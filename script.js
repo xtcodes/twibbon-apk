@@ -112,7 +112,6 @@ uploadInput.addEventListener('change', function () {
       offsetY = 0;
       draw();
 
-      // Toggle tombol
       uploadBtn.style.display = 'none';
       uploadInput.style.display = 'none';
       twibbonBtn.style.display = 'inline-block';
@@ -272,7 +271,7 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Export HD
+// Export HD with Watermark
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
     showToast("⚠️ Silakan unggah gambar dan twibbon terlebih dahulu.");
@@ -307,6 +306,14 @@ downloadBtn.addEventListener('click', function () {
       const y = offsetY * scaleFactor;
       exportCtx.drawImage(photo, x, y, imgW, imgH);
       exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
+
+      // ✅ Tambahkan watermark
+      const watermarkText = "#XTCODE";
+      exportCtx.font = "bold 32px sans-serif";
+      exportCtx.fillStyle = "rgba(255,255,255,0.8)";
+      exportCtx.textAlign = "right";
+      exportCtx.textBaseline = "bottom";
+      exportCtx.fillText(watermarkText, exportSize - 20, exportSize - 20);
 
       const link = document.createElement('a');
       link.download = 'twibboned-image-HD.png';
