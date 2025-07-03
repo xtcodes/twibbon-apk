@@ -93,6 +93,9 @@ canvas {
 .upload:-webkit-details-marker {
   display: none;
 }
+.file {
+  width: 100%;
+}
 .dl {
   appearance: none;
   background-color: #2ea44f;
