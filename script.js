@@ -2,10 +2,11 @@ const uploadInput = document.getElementById('upload');
 const uploadBtn = document.getElementById('uploadBtn');
 const twibbonInput = document.getElementById('twibbonInput');
 const twibbonBtn = document.getElementById('twibbonBtn');
+const downloadBtn = document.getElementById('download');
+const resetBtn = document.getElementById('resetBtn');
+const countdownText = document.getElementById('countdownText');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const downloadBtn = document.getElementById('download');
-const countdownText = document.getElementById('countdownText');
 
 const placeholder = new Image();
 placeholder.src = 'placeholder.png';
@@ -99,8 +100,9 @@ uploadBtn.addEventListener('click', () => {
 
 uploadInput.addEventListener('change', function () {
   const file = uploadInput.files[0];
-  const reader = new FileReader();
+  if (!file) return;
 
+  const reader = new FileReader();
   reader.onload = function (e) {
     const img = new Image();
     img.onload = function () {
@@ -110,14 +112,17 @@ uploadInput.addEventListener('change', function () {
       offsetY = 0;
       draw();
 
+      // Toggle tombol
       uploadBtn.style.display = 'none';
       uploadInput.style.display = 'none';
       twibbonBtn.style.display = 'inline-block';
+      downloadBtn.style.display = 'inline-block';
+      resetBtn.style.display = 'none';
     };
     img.src = e.target.result;
   };
 
-  if (file) reader.readAsDataURL(file);
+  reader.readAsDataURL(file);
 });
 
 // Upload Twibbon
@@ -154,7 +159,7 @@ twibbonInput.addEventListener('change', function () {
       }
 
       if (!hasTransparency) {
-        showToast("❌ Twibbon harus memiliki bagian transparan!");
+        showToast("❌ Twibbon harus memiliki bagian transparan (PNG dengan alpha)");
         return;
       }
 
@@ -169,7 +174,27 @@ twibbonInput.addEventListener('change', function () {
   reader.readAsDataURL(file);
 });
 
-// Interaksi Geser & Zoom
+// Tombol Reset
+resetBtn.addEventListener('click', () => {
+  photo = null;
+  twibbon = new Image();
+  twibbon.src = 'twibbon.png';
+  twibbon.onload = () => draw();
+
+  scale = 1;
+  offsetX = 0;
+  offsetY = 0;
+
+  uploadBtn.style.display = 'inline-block';
+  uploadInput.style.display = 'none';
+  twibbonBtn.style.display = 'none';
+  downloadBtn.style.display = 'none';
+  resetBtn.style.display = 'inline-block';
+
+  draw();
+});
+
+// Interaksi drag zoom
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -250,7 +275,7 @@ function getDist(p1, p2) {
 // Export HD
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
-    showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
+    showToast("⚠️ Silakan unggah gambar dan twibbon terlebih dahulu.");
     return;
   }
 
@@ -279,7 +304,6 @@ downloadBtn.addEventListener('click', function () {
       const x = offsetX * scaleFactor;
       const y = offsetY * scaleFactor;
       exportCtx.drawImage(photo, x, y, imgW, imgH);
-
       exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
 
       const link = document.createElement('a');
@@ -290,7 +314,6 @@ downloadBtn.addEventListener('click', function () {
   }, 1000);
 });
 
-// Load awal
 window.onload = () => {
   placeholder.onload = () => draw();
   if (placeholder.complete) draw();
