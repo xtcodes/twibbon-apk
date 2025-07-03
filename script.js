@@ -7,6 +7,9 @@ const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('download');
 const countdownText = document.getElementById('countdownText');
 
+const twibbon = new Image();
+twibbon.src = 'twibbon.png';
+
 const placeholder = new Image();
 placeholder.src = 'placeholder.png';
 
