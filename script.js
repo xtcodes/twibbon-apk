@@ -189,7 +189,7 @@ resetBtn.addEventListener('click', () => {
   uploadInput.style.display = 'none';
   twibbonBtn.style.display = 'none';
   downloadBtn.style.display = 'none';
-  resetBtn.style.display = 'inline-block';
+  resetBtn.style.display = 'none';
 
   draw();
 });
@@ -291,6 +291,8 @@ downloadBtn.addEventListener('click', function () {
       clearInterval(interval);
       countdownText.textContent = '';
       downloadBtn.disabled = false;
+      downloadBtn.style.display = 'none';
+      resetBtn.style.display = 'inline-block';
 
       const exportSize = 1080;
       const exportCanvas = document.createElement('canvas');
