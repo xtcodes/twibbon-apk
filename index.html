@@ -8,23 +8,20 @@
 </head>
 <body>
   <main>
-  <div id="toast" class="toast"></div>
 
   <h1>Twibbon Maker</h1>
-
   <p>
     <canvas id="canvas" width="500" height="500"></canvas>
   </p>
   <p>
     <input type="file" id="upload" accept="image/*" style="display: none;">
-    <button id="uploadBtn" class="upload" role="button">Upload Gambar</button>
     <input type="file" id="twibbonInput" accept="image/png" style="display: none;">
-    <button id="twibbonBtn" class="upload" role="button" style="display: none;">Upload Twibbon</button>
-
-    <button id="download" class="dl" role="button" style="display: none;">Download Hasil</button>
-    <button id="resetBtn" class="dl" role="button">Reset</button>
-<p id="countdownText"></p>
-
+    
+    <button class="upload" role="button" id="uploadBtn">Upload Foto</button>
+    <button class="upload" role="button" id="twibbonBtn" style="display: none;">Upload Twibbon</button>
+    <button class="dl" role="button" id="download" style="display: none;">Unduh Twibbon</button>
+    <button class="dl" role="button" id="resetBtn" style="display: none;">Buat Lagi</button>
+    <div id="toast" class="toast"></div>
   </p>
     <p id="countdownText" style="font-weight: bold; color: #555;"></p>
 
