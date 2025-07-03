@@ -7,14 +7,13 @@ const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('download');
 const countdownText = document.getElementById('countdownText');
 
-const twibbon = new Image();
-twibbon.src = 'twibbon.png';
-
 const placeholder = new Image();
 placeholder.src = 'placeholder.png';
 
 let photo = null;
-let twibbon = null;
+let twibbon = new Image();
+twibbon.src = 'twibbon.png';
+
 let scale = 1;
 let offsetX = 0;
 let offsetY = 0;
@@ -47,7 +46,7 @@ function draw() {
     ctx.globalAlpha = 1;
   }
 
-  if (twibbon) {
+  if (twibbon && twibbon.complete) {
     ctx.save();
     ctx.globalAlpha = twibbonAlpha;
     ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
@@ -139,7 +138,6 @@ twibbonInput.addEventListener('change', function () {
   reader.onload = function (e) {
     const img = new Image();
     img.onload = function () {
-      // Validasi transparansi
       const testCanvas = document.createElement('canvas');
       testCanvas.width = img.width;
       testCanvas.height = img.height;
@@ -160,8 +158,9 @@ twibbonInput.addEventListener('change', function () {
         return;
       }
 
-      twibbon = img;
-      draw();
+      twibbon = new Image();
+      twibbon.src = e.target.result;
+      twibbon.onload = () => draw();
     };
 
     img.src = e.target.result;
@@ -170,7 +169,7 @@ twibbonInput.addEventListener('change', function () {
   reader.readAsDataURL(file);
 });
 
-// Interaksi drag zoom
+// Interaksi Geser & Zoom
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -248,7 +247,7 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Export HD saat download
+// Export HD
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
     showToast("⚠️ Silakan unggah gambar dan twibbon terlebih dahulu.");
@@ -291,6 +290,7 @@ downloadBtn.addEventListener('click', function () {
   }, 1000);
 });
 
+// Load awal
 window.onload = () => {
   placeholder.onload = () => draw();
   if (placeholder.complete) draw();
