@@ -60,6 +60,7 @@ canvas {
   list-style: none;
   padding: 6px 16px;
   position: relative;
+  text-transform: uppercase;
   transition: background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1);
   user-select: none;
   -webkit-user-select: none;
@@ -112,6 +113,7 @@ canvas {
   line-height: 20px;
   padding: 6px 16px;
   position: relative;
+  text-transform: uppercase;
   text-align: center;
   text-decoration: none;
   user-select: none;
