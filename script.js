@@ -1,5 +1,3 @@
-// Final script.js lengkap dengan perbaikan tombol reset muncul langsung setelah unduh 1x
-
 const uploadInput = document.getElementById('upload');
 const uploadBtn = document.getElementById('uploadBtn');
 const twibbonInput = document.getElementById('twibbonInput');
@@ -28,7 +26,6 @@ let lastDist = 0;
 let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
-
 let twibbonChanged = false;
 
 function draw() {
@@ -122,7 +119,7 @@ twibbonBtn.addEventListener('click', () => twibbonInput.click());
 twibbonInput.addEventListener('change', function () {
   const file = twibbonInput.files[0];
   if (!file || file.type !== 'image/png') {
-    showToast('❌ Twibbon harus berupa file PNG!');
+    showToast('Twibbon harus berupa file PNG!');
     return;
   }
   const reader = new FileReader();
@@ -143,7 +140,7 @@ twibbonInput.addEventListener('change', function () {
         }
       }
       if (!hasTransparency) {
-        showToast("❌ Twibbon harus memiliki bagian transparan (PNG dengan alpha)");
+        showToast("Twibbon harus memiliki bagian transparan.");
         return;
       }
       twibbon = new Image();
@@ -241,12 +238,14 @@ function getDist(p1, p2) {
 
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
-    showToast("⚠️ Silakan unggah gambar dan twibbon terlebih dahulu.");
+    showToast("Silakan unggah gambar terlebih dahulu.");
     return;
   }
+
   let countdown = 15;
   downloadBtn.disabled = true;
   countdownText.textContent = `⏳ Mengunduh dalam ${countdown} detik...`;
+
   const interval = setInterval(() => {
     countdown--;
     if (countdown > 0) {
@@ -256,6 +255,7 @@ downloadBtn.addEventListener('click', function () {
       countdownText.textContent = '';
       downloadBtn.disabled = false;
 
+      // ✅ Logika tombol reset sebelum unduh
       const wasTwibbonChanged = twibbonChanged;
       twibbonChanged = false;
       if (wasTwibbonChanged) {
@@ -272,20 +272,25 @@ downloadBtn.addEventListener('click', function () {
         const exportCtx = exportCanvas.getContext('2d');
         exportCanvas.width = exportSize;
         exportCanvas.height = exportSize;
+
         const scaleFactor = exportSize / canvas.width;
         const imgW = photo.width * scale * scaleFactor;
         const imgH = photo.height * scale * scaleFactor;
         const x = offsetX * scaleFactor;
         const y = offsetY * scaleFactor;
+
         exportCtx.drawImage(photo, x, y, imgW, imgH);
         exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
+
+        // Watermark
         exportCtx.font = "bold 32px sans-serif";
         exportCtx.fillStyle = "rgba(255,255,255,0.8)";
         exportCtx.textAlign = "right";
         exportCtx.textBaseline = "bottom";
         exportCtx.fillText("#XTCODE", exportSize - 20, exportSize - 20);
+
         const link = document.createElement('a');
-        link.download = 'twibboned-image-HD.png';
+        link.download = 'twibboned.png';
         link.href = exportCanvas.toDataURL('image/png');
         link.click();
       }, 100);
