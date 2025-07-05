@@ -11,7 +11,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 const placeholder = new Image();
-placeholder.src = 'placeholder.png';
+placeholder.src = 'placeholder.jpg';
 
 let photo = null;
 let twibbon = new Image();
@@ -122,7 +122,7 @@ twibbonBtn.addEventListener('click', () => twibbonInput.click());
 twibbonInput.addEventListener('change', function () {
   const file = twibbonInput.files[0];
   if (!file || file.type !== 'image/png') {
-    showToast('Twibbon harus berupa file PNG!');
+    showToast('❌ Twibbon harus berupa file PNG!');
     return;
   }
   const reader = new FileReader();
@@ -143,7 +143,7 @@ twibbonInput.addEventListener('change', function () {
         }
       }
       if (!hasTransparency) {
-        showToast("Twibbon harus memiliki bagian transparan!");
+        showToast("❌ Twibbon harus memiliki bagian transparan (PNG dengan alpha)");
         return;
       }
       twibbon = new Image();
@@ -241,7 +241,7 @@ function getDist(p1, p2) {
 
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
-    showToast("Silakan unggah gambar terlebih dahulu.");
+    showToast("⚠️ Silakan unggah gambar dan twibbon terlebih dahulu.");
     return;
   }
   let countdown = 15;
@@ -255,25 +255,7 @@ downloadBtn.addEventListener('click', function () {
       clearInterval(interval);
       countdownText.textContent = '';
       downloadBtn.disabled = false;
-      const exportSize = 1080;
-      const exportCanvas = document.createElement('canvas');
-      const exportCtx = exportCanvas.getContext('2d');
-      exportCanvas.width = exportSize;
-      exportCanvas.height = exportSize;
-      const scaleFactor = exportSize / canvas.width;
-      const imgW = photo.width * scale * scaleFactor;
-      const imgH = photo.height * scale * scaleFactor;
-      const x = offsetX * scaleFactor;
-      const y = offsetY * scaleFactor;
-      exportCtx.drawImage(photo, x, y, imgW, imgH);
-      exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
-      exportCtx.font = "bold 32px sans-serif";
-      exportCtx.fillStyle = "rgba(255,255,255,0.8)";
-      exportCtx.textAlign = "right";
-      exportCtx.textBaseline = "bottom";
-      exportCtx.fillText("#XTCODE", exportSize - 20, exportSize - 20);
 
-      // ✅ Perbaikan logika tombol
       const wasTwibbonChanged = twibbonChanged;
       twibbonChanged = false;
       if (wasTwibbonChanged) {
@@ -285,6 +267,23 @@ downloadBtn.addEventListener('click', function () {
       }
 
       setTimeout(() => {
+        const exportSize = 1080;
+        const exportCanvas = document.createElement('canvas');
+        const exportCtx = exportCanvas.getContext('2d');
+        exportCanvas.width = exportSize;
+        exportCanvas.height = exportSize;
+        const scaleFactor = exportSize / canvas.width;
+        const imgW = photo.width * scale * scaleFactor;
+        const imgH = photo.height * scale * scaleFactor;
+        const x = offsetX * scaleFactor;
+        const y = offsetY * scaleFactor;
+        exportCtx.drawImage(photo, x, y, imgW, imgH);
+        exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
+        exportCtx.font = "bold 32px sans-serif";
+        exportCtx.fillStyle = "rgba(255,255,255,0.8)";
+        exportCtx.textAlign = "right";
+        exportCtx.textBaseline = "bottom";
+        exportCtx.fillText("#XTCODE", exportSize - 20, exportSize - 20);
         const link = document.createElement('a');
         link.download = 'twibboned-image-HD.png';
         link.href = exportCanvas.toDataURL('image/png');
