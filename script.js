@@ -27,6 +27,8 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
+let twibbonChanged = false;
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -158,13 +160,18 @@ twibbonInput.addEventListener('change', function () {
       }
 
       if (!hasTransparency) {
-        showToast("Twibbon harus memiliki bagian transparan!");
+        showToast("Twibbon harus memiliki bagian transparan.");
         return;
       }
 
       twibbon = new Image();
       twibbon.src = e.target.result;
       twibbon.onload = () => draw();
+
+      // Logika tombol jika twibbon berubah
+      twibbonChanged = true;
+      downloadBtn.style.display = 'inline-block';
+      resetBtn.style.display = 'none';
     };
 
     img.src = e.target.result;
@@ -193,13 +200,12 @@ resetBtn.addEventListener('click', () => {
   draw();
 });
 
-// Interaksi drag zoom
+// Interaksi drag & zoom
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
   startY = e.offsetY;
 });
-
 canvas.addEventListener('mousemove', (e) => {
   if (!isDragging || !photo) return;
   const dx = e.offsetX - startX;
@@ -213,7 +219,6 @@ canvas.addEventListener('mousemove', (e) => {
   animateTwibbonAlpha();
   showTwibbonLater();
 });
-
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
@@ -226,7 +231,6 @@ canvas.addEventListener('touchstart', (e) => {
     lastDist = getDist(e.touches[0], e.touches[1]);
   }
 });
-
 canvas.addEventListener('touchmove', (e) => {
   e.preventDefault();
   if (!photo) return;
@@ -262,7 +266,6 @@ canvas.addEventListener('touchmove', (e) => {
     showTwibbonLater();
   }
 }, { passive: false });
-
 canvas.addEventListener('touchend', () => isDragging = false);
 
 function getDist(p1, p2) {
@@ -271,7 +274,7 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Export HD with Watermark
+// Export HD + Watermark
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
     showToast("Silakan unggah gambar terlebih dahulu.");
@@ -290,8 +293,6 @@ downloadBtn.addEventListener('click', function () {
       clearInterval(interval);
       countdownText.textContent = '';
       downloadBtn.disabled = false;
-      downloadBtn.style.display = 'none';
-      resetBtn.style.display = 'inline-block';
 
       const exportSize = 1080;
       const exportCanvas = document.createElement('canvas');
@@ -307,7 +308,7 @@ downloadBtn.addEventListener('click', function () {
       exportCtx.drawImage(photo, x, y, imgW, imgH);
       exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
 
-      // ✅ Tambahkan watermark
+      // Watermark
       const watermarkText = "#XTCODE";
       exportCtx.font = "bold 32px sans-serif";
       exportCtx.fillStyle = "rgba(255,255,255,0.8)";
@@ -319,6 +320,16 @@ downloadBtn.addEventListener('click', function () {
       link.download = 'twibboned-image-HD.png';
       link.href = exportCanvas.toDataURL('image/png');
       link.click();
+
+      // Logika tombol setelah unduh
+      if (twibbonChanged) {
+        downloadBtn.style.display = 'inline-block';
+        resetBtn.style.display = 'none';
+        twibbonChanged = false;
+      } else {
+        downloadBtn.style.display = 'none';
+        resetBtn.style.display = 'inline-block';
+      }
     }
   }, 1000);
 });
