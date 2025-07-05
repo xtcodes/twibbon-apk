@@ -1,5 +1,3 @@
-// Final fixed script.js dengan perbaikan tombol reset muncul tepat setelah unduh pertama tanpa klik dua kali
-
 const uploadInput = document.getElementById('upload');
 const uploadBtn = document.getElementById('uploadBtn');
 const twibbonInput = document.getElementById('twibbonInput');
@@ -29,11 +27,9 @@ let twibbonAlpha = 1;
 let targetAlpha = 1;
 let animating = false;
 
-let twibbonChanged = false;
-let imageDownloaded = false;
-
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   if (photo) {
     const imgW = photo.width * scale;
     const imgH = photo.height * scale;
@@ -50,6 +46,7 @@ function draw() {
     ctx.drawImage(placeholder, x, y, w, h);
     ctx.globalAlpha = 1;
   }
+
   if (twibbon && twibbon.complete) {
     ctx.save();
     ctx.globalAlpha = twibbonAlpha;
@@ -61,6 +58,7 @@ function draw() {
 function animateTwibbonAlpha() {
   if (animating) return;
   animating = true;
+
   function step() {
     const diff = targetAlpha - twibbonAlpha;
     if (Math.abs(diff) < 0.01) {
@@ -73,6 +71,7 @@ function animateTwibbonAlpha() {
     draw();
     requestAnimationFrame(step);
   }
+
   step();
 }
 
@@ -94,11 +93,15 @@ function showToast(message) {
   }, 3000);
 }
 
-uploadBtn.addEventListener('click', () => uploadInput.click());
+// Upload Gambar
+uploadBtn.addEventListener('click', () => {
+  uploadInput.click();
+});
 
 uploadInput.addEventListener('change', function () {
   const file = uploadInput.files[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = function (e) {
     const img = new Image();
@@ -108,25 +111,33 @@ uploadInput.addEventListener('change', function () {
       offsetX = 0;
       offsetY = 0;
       draw();
+
       uploadBtn.style.display = 'none';
+      uploadInput.style.display = 'none';
       twibbonBtn.style.display = 'inline-block';
       downloadBtn.style.display = 'inline-block';
       resetBtn.style.display = 'none';
-      imageDownloaded = false;
     };
     img.src = e.target.result;
   };
+
   reader.readAsDataURL(file);
 });
 
-twibbonBtn.addEventListener('click', () => twibbonInput.click());
+// Upload Twibbon
+twibbonBtn.addEventListener('click', () => {
+  twibbonInput.click();
+});
 
 twibbonInput.addEventListener('change', function () {
   const file = twibbonInput.files[0];
-  if (!file || file.type !== 'image/png') {
-    showToast('❌ Twibbon harus berupa file PNG!');
+  if (!file) return;
+
+  if (file.type !== 'image/png') {
+    showToast('Twibbon harus berupa file PNG!');
     return;
   }
+
   const reader = new FileReader();
   reader.onload = function (e) {
     const img = new Image();
@@ -138,49 +149,132 @@ twibbonInput.addEventListener('change', function () {
       testCtx.drawImage(img, 0, 0);
       const pixels = testCtx.getImageData(0, 0, img.width, img.height).data;
       let hasTransparency = false;
+
       for (let i = 3; i < pixels.length; i += 4) {
         if (pixels[i] < 255) {
           hasTransparency = true;
           break;
         }
       }
+
       if (!hasTransparency) {
-        showToast("❌ Twibbon harus memiliki bagian transparan.");
+        showToast("Twibbon harus memiliki bagian transparan!");
         return;
       }
+
       twibbon = new Image();
       twibbon.src = e.target.result;
       twibbon.onload = () => draw();
-      twibbonChanged = true;
-      if (!imageDownloaded) {
-        downloadBtn.style.display = 'inline-block';
-        resetBtn.style.display = 'none';
-      }
     };
+
     img.src = e.target.result;
   };
+
   reader.readAsDataURL(file);
 });
 
+// Tombol Reset
 resetBtn.addEventListener('click', () => {
   photo = null;
   twibbon = new Image();
   twibbon.src = 'twibbon.png';
   twibbon.onload = () => draw();
+
   scale = 1;
   offsetX = 0;
   offsetY = 0;
+
   uploadBtn.style.display = 'inline-block';
+  uploadInput.style.display = 'none';
   twibbonBtn.style.display = 'none';
   downloadBtn.style.display = 'none';
   resetBtn.style.display = 'none';
-  imageDownloaded = false;
+
   draw();
 });
 
+// Interaksi drag zoom
+canvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  startX = e.offsetX;
+  startY = e.offsetY;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!isDragging || !photo) return;
+  const dx = e.offsetX - startX;
+  const dy = e.offsetY - startY;
+  startX = e.offsetX;
+  startY = e.offsetY;
+  offsetX += dx;
+  offsetY += dy;
+
+  targetAlpha = 0.5;
+  animateTwibbonAlpha();
+  showTwibbonLater();
+});
+
+canvas.addEventListener('mouseup', () => isDragging = false);
+canvas.addEventListener('mouseleave', () => isDragging = false);
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    lastDist = getDist(e.touches[0], e.touches[1]);
+  }
+});
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (!photo) return;
+
+  if (e.touches.length === 1 && isDragging) {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    offsetX += dx;
+    offsetY += dy;
+
+    targetAlpha = 0.5;
+    animateTwibbonAlpha();
+    showTwibbonLater();
+  } else if (e.touches.length === 2) {
+    const newDist = getDist(e.touches[0], e.touches[1]);
+    const zoom = newDist / lastDist;
+    lastDist = newDist;
+
+    const rect = canvas.getBoundingClientRect();
+    const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+    const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+
+    const prevScale = scale;
+    scale *= zoom;
+
+    offsetX -= (centerX - offsetX) * (scale / prevScale - 1);
+    offsetY -= (centerY - offsetY) * (scale / prevScale - 1);
+
+    targetAlpha = 0.5;
+    animateTwibbonAlpha();
+    showTwibbonLater();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => isDragging = false);
+
+function getDist(p1, p2) {
+  const dx = p1.clientX - p2.clientX;
+  const dy = p1.clientY - p2.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Export HD with Watermark
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
-    showToast("⚠️ Silakan unggah gambar terlebih dahulu.");
+    showToast("Silakan unggah gambar terlebih dahulu.");
     return;
   }
 
@@ -198,35 +292,33 @@ downloadBtn.addEventListener('click', function () {
       downloadBtn.disabled = false;
       downloadBtn.style.display = 'none';
       resetBtn.style.display = 'inline-block';
-      imageDownloaded = true;
 
-      setTimeout(() => {
-        const exportSize = 1080;
-        const exportCanvas = document.createElement('canvas');
-        const exportCtx = exportCanvas.getContext('2d');
-        exportCanvas.width = exportSize;
-        exportCanvas.height = exportSize;
+      const exportSize = 1080;
+      const exportCanvas = document.createElement('canvas');
+      const exportCtx = exportCanvas.getContext('2d');
+      exportCanvas.width = exportSize;
+      exportCanvas.height = exportSize;
 
-        const scaleFactor = exportSize / canvas.width;
-        const imgW = photo.width * scale * scaleFactor;
-        const imgH = photo.height * scale * scaleFactor;
-        const x = offsetX * scaleFactor;
-        const y = offsetY * scaleFactor;
+      const scaleFactor = exportSize / canvas.width;
+      const imgW = photo.width * scale * scaleFactor;
+      const imgH = photo.height * scale * scaleFactor;
+      const x = offsetX * scaleFactor;
+      const y = offsetY * scaleFactor;
+      exportCtx.drawImage(photo, x, y, imgW, imgH);
+      exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
 
-        exportCtx.drawImage(photo, x, y, imgW, imgH);
-        exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
+      // ✅ Tambahkan watermark
+      const watermarkText = "#XTCODE";
+      exportCtx.font = "bold 32px sans-serif";
+      exportCtx.fillStyle = "rgba(255,255,255,0.8)";
+      exportCtx.textAlign = "right";
+      exportCtx.textBaseline = "bottom";
+      exportCtx.fillText(watermarkText, exportSize - 20, exportSize - 20);
 
-        exportCtx.font = "bold 32px sans-serif";
-        exportCtx.fillStyle = "rgba(255,255,255,0.8)";
-        exportCtx.textAlign = "right";
-        exportCtx.textBaseline = "bottom";
-        exportCtx.fillText("#XTCODES", exportSize - 20, exportSize - 20);
-
-        const link = document.createElement('a');
-        link.download = 'twibboned-image-HD.png';
-        link.href = exportCanvas.toDataURL('image/png');
-        link.click();
-      }, 100);
+      const link = document.createElement('a');
+      link.download = 'twibboned-image-HD.png';
+      link.href = exportCanvas.toDataURL('image/png');
+      link.click();
     }
   }, 1000);
 });
