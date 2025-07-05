@@ -11,7 +11,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 const placeholder = new Image();
-placeholder.src = 'placeholder.jpg';
+placeholder.src = 'placeholder.png';
 
 let photo = null;
 let twibbon = new Image();
