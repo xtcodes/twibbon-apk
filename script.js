@@ -160,7 +160,7 @@ twibbonInput.addEventListener('change', function () {
       }
 
       if (!hasTransparency) {
-        showToast("Twibbon harus memiliki bagian transparan.");
+        showToast("Twibbon harus memiliki bagian transparan!");
         return;
       }
 
@@ -168,7 +168,7 @@ twibbonInput.addEventListener('change', function () {
       twibbon.src = e.target.result;
       twibbon.onload = () => draw();
 
-      // Logika tombol jika twibbon berubah
+      // Twibbon diubah
       twibbonChanged = true;
       downloadBtn.style.display = 'inline-block';
       resetBtn.style.display = 'none';
@@ -180,7 +180,7 @@ twibbonInput.addEventListener('change', function () {
   reader.readAsDataURL(file);
 });
 
-// Tombol Reset
+// Reset
 resetBtn.addEventListener('click', () => {
   photo = null;
   twibbon = new Image();
@@ -200,7 +200,7 @@ resetBtn.addEventListener('click', () => {
   draw();
 });
 
-// Interaksi drag & zoom
+// Interaksi geser & zoom
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.offsetX;
@@ -274,7 +274,7 @@ function getDist(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Export HD + Watermark
+// Tombol Unduh
 downloadBtn.addEventListener('click', function () {
   if (!photo || !twibbon) {
     showToast("Silakan unggah gambar terlebih dahulu.");
@@ -308,7 +308,7 @@ downloadBtn.addEventListener('click', function () {
       exportCtx.drawImage(photo, x, y, imgW, imgH);
       exportCtx.drawImage(twibbon, 0, 0, exportSize, exportSize);
 
-      // Watermark
+      // Tambah watermark
       const watermarkText = "#XTCODE";
       exportCtx.font = "bold 32px sans-serif";
       exportCtx.fillStyle = "rgba(255,255,255,0.8)";
@@ -321,11 +321,13 @@ downloadBtn.addEventListener('click', function () {
       link.href = exportCanvas.toDataURL('image/png');
       link.click();
 
-      // Logika tombol setelah unduh
-      if (twibbonChanged) {
+      // ✅ Fix tombol
+      const wasTwibbonChanged = twibbonChanged;
+      twibbonChanged = false;
+
+      if (wasTwibbonChanged) {
         downloadBtn.style.display = 'inline-block';
         resetBtn.style.display = 'none';
-        twibbonChanged = false;
       } else {
         downloadBtn.style.display = 'none';
         resetBtn.style.display = 'inline-block';
